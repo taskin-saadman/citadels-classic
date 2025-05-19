@@ -1,6 +1,8 @@
 // src/main/java/citadels/model/card/DistrictCard.java
 package citadels.model.card;
 
+import java.util.Locale;
+
 /**
  * A buildable district card (yellow, blue, green, red, or purple).
  */
@@ -29,14 +31,39 @@ public final class DistrictCard extends Card {
         return cost;
     }
 
-    /** @return rule text for purple districts, or {@code null}. */
+    /** @return rule text for purple buildings, or {@code null}. */
     public String getSpecialText() {
         return specialText;
     }
 
+    /* =============================================================
+       Helper flags for purple-district effects
+       =========================================================== */
+
+    public boolean isLibrary() {
+        return getName().equalsIgnoreCase("Library");
+    }
+
+    public boolean isSchoolOfMagic() {
+        return getName().equalsIgnoreCase("School of Magic");
+    }
+
+    public boolean isHauntedQuarter() {
+        return getName().equalsIgnoreCase("Haunted Quarter");
+    }
+
+    /** Dragon Gate or University give +2 victory points. */
+    public boolean givesExtraPoints() {
+        String n = getName().toLowerCase(Locale.ROOT);
+        return n.contains("dragon gate") || n.contains("university");
+    }
+
+    /* ============================================================= */
+
     @Override
     public String toString() {
-        return String.format("%s [%s%d]", getName().replace('_', ' '),
-                             color.name().toLowerCase(), cost);
+        return String.format("%s [%s%d]",
+                getName().replace('_', ' '),
+                color.name().toLowerCase(), cost);
     }
 }

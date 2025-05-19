@@ -1,12 +1,13 @@
 package citadels.model.game;
 
-import citadels.cli.CommandHandler;
+import citadels.cli.*;
 import citadels.model.card.*;
 import citadels.model.character.*;
 import citadels.model.player.*;
 import citadels.util.TSVLoader;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Central game engine for Citadels Classic.
@@ -121,7 +122,7 @@ public final class CitadelsGame {
 
     public List<Player> getPlayers(){ return Collections.unmodifiableList(players);}
     List<String> getDistrictDeckNames() {
-        return districtDeck.asListView().stream().map(Card::getName).toList();
+        return districtDeck.asListView().stream().map(Card::getName).collect(Collectors.toList());
     }
     void resetDistrictDeck(List<DistrictCard> ordered) {
         districtDeck = new Deck<>(ordered);
@@ -216,7 +217,7 @@ public final class CitadelsGame {
 
             if (acting instanceof HumanPlayer) cli.println("Your turn.");
             acting.takeTurn(this);           // ability + actions
-            if (cli instanceof ConsoleHandler c && c.isDebug()
+            if (cli instanceof ConsoleHandler && ((ConsoleHandler)cli).isDebug()
                                 && acting instanceof AIPlayer) {
                 cli.println("Debug: " + acting.getHand());
             }
@@ -232,11 +233,17 @@ public final class CitadelsGame {
     }
 
     private static String rankName(int r) {
-        return switch (r) {
-            case 1 -> "Assassin";  case 2 -> "Thief";    case 3 -> "Magician";
-            case 4 -> "King";      case 5 -> "Bishop";   case 6 -> "Merchant";
-            case 7 -> "Architect"; case 8 -> "Warlord";  default -> "?";
-        };
+        switch (r) {
+            case 1: return "Assassin";
+            case 2: return "Thief";
+            case 3: return "Magician";
+            case 4: return "King";
+            case 5: return "Bishop";
+            case 6: return "Merchant";
+            case 7: return "Architect";
+            case 8: return "Warlord";
+            default: return "?";
+        }
     }
 
     /* ------------------------------------------------- *
@@ -270,6 +277,11 @@ public final class CitadelsGame {
     }
     public int promptAndDiscardCards(Player p,String q){ return 0; }
 
+    /** Query method used by AI to see if a player is Bishop-protected. */
+    public boolean isBishopProtected(Player p) {
+        return bishopProtected.contains(p);
+    }
+
     /* ------------------------------------------------- *
      *  Mutators / rule-logic                            *
      * ------------------------------------------------- */
@@ -293,14 +305,55 @@ public final class CitadelsGame {
         for(int i=0;i<n && !districtDeck.isEmpty();i++)
             p.addCardToHand(districtDeck.draw());
     }
+    /** Draw 2 cards; owner keeps both if Library, otherwise keep-one-discard-one. */
+    public void drawTwoChoose(Player p) {
+        if (districtDeck.size() < 2) { drawCards(p, 2); return; }
+
+        DistrictCard a = districtDeck.draw();
+        DistrictCard b = districtDeck.draw();
+
+        if (p.getCity().stream().anyMatch(card -> card.isLibrary())) {
+            p.addCardToHand(a); p.addCardToHand(b);
+            cli.println("Library effect: kept both cards.");
+            return;
+        }
+
+        // AI keeps highest-cost; human handled in CLI later
+        if (p instanceof AIPlayer) {
+            DistrictCard keep = (a.getCost() >= b.getCost()) ? a : b;
+            DistrictCard discard = (keep == a) ? b : a;
+            p.addCardToHand(keep);
+            districtDeck.putOnBottom(discard);
+            return;
+        }
+
+        // human → show both, ask choice
+        cli.println("Pick one of the following cards: 'collect card <1|2>'.");
+        cli.println("1. " + a);
+        cli.println("2. " + b);
+        while (true) {
+            String in = cli.prompt("> ").trim();
+            if (in.equalsIgnoreCase("collect card 1")) {
+                p.addCardToHand(a); districtDeck.putOnBottom(b); break;
+            }
+            if (in.equalsIgnoreCase("collect card 2")) {
+                p.addCardToHand(b); districtDeck.putOnBottom(a); break;
+            }
+            cli.println("Type 'collect card 1' or 'collect card 2'");
+        }
+    }
+
     public void collectGold(Player p){
         p.gainGold(2); cli.println("Player "+(p.getId()+1)+" collected 2 gold.");
     }
     public void gainGold(Player p,int n){ p.gainGold(n); }
-    public void gainGoldForColor(Player p,DistrictColor col){
-        long cnt=p.getCity().stream().filter(c->c.getColor()==col).count();
-        p.gainGold((int)cnt);
+    public void gainGoldForColor(Player p, DistrictColor color) {
+        long count = p.getCity().stream()
+                  .filter(c -> c.getColor() == color || c.isSchoolOfMagic())
+                  .count();
+        p.gainGold((int) count);
     }
+
 
     /* ----- build with Architect limit & duplicates check ----- */
     public void buildDistrict(Player p, DistrictCard card) {

@@ -24,8 +24,12 @@ public final class AIPlayer extends Player {
 
         /* ---------- 0. Execute mandatory / early ability ---------- */
         switch (character.getRank()) {
-            case 1 -> assassinTurn(game);    // Assassin
-            case 2 -> thiefTurn(game);       // Thief
+            case 1:
+                assassinTurn(game);    // Assassin
+                break;
+            case 2:
+                thiefTurn(game);       // Thief
+                break;
         }
 
         /* ---------- 1. Gather resources -------------------------- */
@@ -40,8 +44,12 @@ public final class AIPlayer extends Player {
 
         /* ---------- 4. Late abilities ---------------------------- */
         switch (character.getRank()) {
-            case 3 -> magicianPostBuild(game);  // Magician
-            case 8 -> warlordTurn(game);        // Warlord
+            case 3:
+                magicianPostBuild(game);  // Magician
+                break;
+            case 8:
+                warlordTurn(game);        // Warlord
+                break;
         }
     }
 
@@ -57,7 +65,7 @@ public final class AIPlayer extends Player {
         if (!canAffordSomething && gold < 2) {
             game.collectGold(this);
         } else if (hand.size() <= 2) {
-            game.drawCards(this, 2);
+            game.drawTwoChoose(this);
         } else {
             game.collectGold(this);
         }
@@ -146,21 +154,26 @@ public final class AIPlayer extends Player {
     private void warlordTurn(CitadelsGame game) {
         // choose cheapest destroyable district of a vulnerable player
         Player victim = game.getPlayers().stream()
-                .filter(p -> p != this && p.getCity().size() < 8)
-                .filter(p -> !game.bishopProtected().contains(p))
+                .filter(p -> p != this)
+                .filter(p -> p.getCity().size() < 8)          // not completed
+                .filter(p -> !game.isBishopProtected(p))      // not protected
                 .min(Comparator.comparingInt(p ->
-                        p.getCity().stream().mapToInt(DistrictCard::getCost).min().orElse(99)))
+                        p.getCity().stream()
+                                .mapToInt(DistrictCard::getCost)
+                                .min().orElse(Integer.MAX_VALUE)))
                 .orElse(null);
 
         if (victim == null) return;
 
         int idx = -1;
         int minCost = Integer.MAX_VALUE;
-        List<DistrictCard> vc = victim.getCity();
-        for (int i = 0; i < vc.size(); i++) {
-            int c = vc.get(i).getCost();
-            int trueCost = Math.max(0, c - 1);
-            if (trueCost <= gold && trueCost < minCost) { idx = i; minCost = trueCost; }
+
+        for (int i = 0; i < victim.getCity().size(); i++) {
+            DistrictCard d = victim.getCity().get(i);
+            int trueCost = Math.max(0, d.getCost() - 1);
+            if (trueCost <= gold && trueCost < minCost) {
+                idx = i; minCost = trueCost;
+            }
         }
         if (idx >= 0) game.destroyDistrict(this, victim, idx);
     }

@@ -35,7 +35,7 @@ public final class Deck<T extends Card> {
 
     /** Add a batch, preserving the iteration order (first element ends up on top). */
     public void addAll(Collection<? extends T> batch) {
-        // iterate in reverse to keep intuitive “first becomes top” order
+        // iterate in reverse to keep intuitive "first becomes top" order
         List<? extends T> list = new ArrayList<>(batch);
         ListIterator<? extends T> it = list.listIterator(list.size());
         while (it.hasPrevious()) cards.addFirst(it.previous());
