@@ -1,38 +1,30 @@
-// src/main/java/citadels/cli/CommandParser.java
 package citadels.cli;
 
 import java.util.*;
 
+/** Very lenient split on whitespace – keeps quoted substrings intact. */
 public final class CommandParser {
 
-    private CommandParser() {}  // utility
+    private CommandParser() {}
 
-    /**
-     * Very lenient split on whitespace; keeps quoted strings intact.
-     */
     public static Command parse(String raw) {
         raw = raw.trim();
         if (raw.isEmpty()) return Command.of("", List.of());
 
-        List<String> tokens = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean inQuotes = false;
+        List<String> out = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        boolean inQ = false;
 
         for (char c : raw.toCharArray()) {
             if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (Character.isWhitespace(c) && !inQuotes) {
-                if (current.length() > 0) {
-                    tokens.add(current.toString());
-                    current.setLength(0);
-                }
-            } else {
-                current.append(c);
-            }
+                inQ = !inQ;
+            } else if (Character.isWhitespace(c) && !inQ) {
+                if (sb.length() > 0) { out.add(sb.toString()); sb.setLength(0); }
+            } else sb.append(c);
         }
-        if (current.length() > 0) tokens.add(current.toString());
+        if (sb.length() > 0) out.add(sb.toString());
 
-        String keyword = tokens.isEmpty() ? "" : tokens.remove(0);
-        return Command.of(keyword, tokens);
+        String key = out.isEmpty() ? "" : out.remove(0).toLowerCase();
+        return Command.of(key, out);
     }
 }
