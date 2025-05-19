@@ -68,15 +68,10 @@ public final class CitadelsGame {
      * ================================================================ */
     public void playRound() {
 
-        /* === round banner === */
-        cli.println("\n=== ROUND " + roundNo +
-                " (Crown: Player " + (crownedSeat + 1) + ") ===");
-
         /* crowned player / press-t gating (like PDF) */
         cli.println("Player " + (crownedSeat + 1) +
                 " is the crowned player and goes first.");
         cli.println("Press t to process turns");
-        waitForHumanT();
 
         selectionPhase();
         turnPhase();
@@ -124,6 +119,7 @@ public final class CitadelsGame {
         cli.println("================================");
         cli.println("SELECTION PHASE");
         cli.println("================================");
+        waitForHumanT();
 
         List<CharacterCard> tray = new ArrayList<>(characterDeck.asListView());
         Collections.shuffle(tray, rng);
@@ -148,7 +144,6 @@ public final class CitadelsGame {
 
         for (CharacterCard c : up) {
             cli.println(c.getName() + " was removed.");
-            waitForHumanT();
         }
         cli.println("A mystery character was removed.");
         waitForHumanT();
@@ -175,6 +170,10 @@ public final class CitadelsGame {
             seat = (seat + 1) % players.size();
         }
 
+    /* ================================================================ *
+     *  Turn phase                                                      *
+     * ================================================================ */
+    
         cli.println("\nCharacter choosing is over, action round will now begin.");
         cli.println("================================");
         cli.println("TURN PHASE");
@@ -192,9 +191,6 @@ public final class CitadelsGame {
         }
     }
 
-    /* ================================================================ *
-     *  Turn phase                                                      *
-     * ================================================================ */
     private void turnPhase() {
         phase = GamePhase.TURN;
 
