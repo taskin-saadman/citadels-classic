@@ -88,7 +88,7 @@ public final class AIPlayer extends Player {
                     .sorted(buildComparator())
                     .findFirst();
 
-            if (best.isEmpty()) break;
+            if (!best.isPresent()) break;
             game.buildDistrict(this, best.get());
             built++;
         }

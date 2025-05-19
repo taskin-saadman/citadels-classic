@@ -9,7 +9,7 @@ public final class CommandParser {
 
     public static Command parse(String raw) {
         raw = raw.trim();
-        if (raw.isEmpty()) return Command.of("", List.of());
+        if (raw.isEmpty()) return Command.of("", Collections.emptyList());
 
         List<String> out = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
