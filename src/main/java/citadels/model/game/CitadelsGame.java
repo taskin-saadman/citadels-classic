@@ -121,6 +121,23 @@ public final class CitadelsGame {
     void setCrownedSeat(int s)      { crownedSeat = s; }
 
     public List<Player> getPlayers(){ return Collections.unmodifiableList(players);}
+
+        /* ------------------------------------------------- *
+     *  Extra helper accessors for CLI / tests           *
+     * ------------------------------------------------- */
+
+    /** Direct seat lookup (seat numbers are 0-based internally). */
+    public Player getPlayer(int seatIndex) {
+        return players.get(seatIndex);
+    }
+
+    /** Return the CharacterCard currently assigned to the given rank, or null. */
+    public CharacterCard findCharacterCard(int rank) {
+        Player p = findPlayerByRank(rank);    // existing private helper
+        return (p == null) ? null : p.getCharacter();
+    }
+
+    
     List<String> getDistrictDeckNames() {
         return districtDeck.asListView().stream().map(Card::getName).collect(Collectors.toList());
     }
@@ -404,4 +421,17 @@ public final class CitadelsGame {
                 new Bishop(),  new Merchant(), new Architect(), new Warlord()
         ));
     }
+
+    /* ---------- state needed for save/load ---------- */
+public Set<Integer> getKilledRanks()          { return new HashSet<>(killedRanks); }
+public void         setKilledRanks(Set<Integer> ks) { killedRanks.clear(); killedRanks.addAll(ks); }
+
+public int  getRobbedRank()                   { return robbedRank; }
+public void setRobbedRank(int r)              { robbedRank = r; }
+
+public Set<Player> getBishopProtected()       { return new HashSet<>(bishopProtected); }
+public void        setBishopProtected(Set<Player> ps) {
+    bishopProtected.clear(); bishopProtected.addAll(ps);
+}
+
 }

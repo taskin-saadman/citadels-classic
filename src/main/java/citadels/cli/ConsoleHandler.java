@@ -17,6 +17,22 @@ public final class ConsoleHandler implements CommandHandler {
 
     /* ---- debug ---- */
     public void toggleDebug()  { debug = !debug; }
+
+        /* ------------------------------------------------------------------ *
+     *  Prompt for player count (4-7)                                     *
+     * ------------------------------------------------------------------ */
+    public int askPlayers() {
+        while (true) {
+            try {
+                String raw = prompt("Enter how many players [4-7]:\n> ");
+                int n = Integer.parseInt(raw.trim());
+                if (n >= 4 && n <= 7) return n;
+            } catch (NumberFormatException ignore) { }
+            println("Please enter a number between 4 and 7.");
+        }
+    }
+
+
     public boolean isDebug()   { return debug;   }
 
     /* ---- repository access for load() ---- */

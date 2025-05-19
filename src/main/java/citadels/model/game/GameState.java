@@ -1,115 +1,141 @@
+// src/main/java/citadels/model/game/GameState.java
 package citadels.model.game;
 
 import citadels.cli.CommandHandler;
 import citadels.model.card.*;
 import citadels.model.player.Player;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import citadels.util.CardRepository;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import java.util.*;
 
 /**
- * Stateless helper able to (de)serialise a {@link CitadelsGame}.
- *
- * <p>This initial version stores enough information for assignment
- * requirements; feel free to extend as you add new features.</p>
+ * Serialises / deserialises a running game, now including mid-round flags:
+ * killedRanks, robbedRank, and bishopProtected.
  */
 public final class GameState {
 
-    private GameState() { /* utility */ }
+    private GameState() {}
 
-    /* ------------------------------------------------- *
-     * Serialise to JSON                                 *
-     * ------------------------------------------------- */
-
+    /* ============================================================= *
+     *  SERIALISE                                                    *
+     * ============================================================= */
     @SuppressWarnings("unchecked")
-    public static JSONObject serialise(CitadelsGame game) {
+    public static JSONObject serialise(CitadelsGame g) {
 
         JSONObject root = new JSONObject();
-        root.put("round", game.getRound());
-        root.put("crownSeat", game.getCrownedSeat());
+        root.put("round",        g.getRound());
+        root.put("crownSeat",    g.getCrownedSeat());
+        root.put("robbedRank",   g.getRobbedRank());
 
-        /* --- players --- */
-        JSONArray playersJson = new JSONArray();
-        for (Player p : game.getPlayers()) {
-            JSONObject po = new JSONObject();
-            po.put("id", p.getId());
-            po.put("gold", p.getGold());
-            po.put("character", p.getCharacter() == null
-                                ? 0 : p.getCharacter().getRank());
+        /* killed rank set */
+        JSONArray killed = new JSONArray();
+        killed.addAll(g.getKilledRanks());
+        root.put("killedRanks",  killed);
 
-            po.put("hand", namesArray(p.getHand().stream().map(Card::getName)
-                                                   .collect(Collectors.toList())));
-            po.put("city", namesArray(p.getCity().stream().map(Card::getName)
-                                                   .collect(Collectors.toList())));
-            playersJson.add(po);
-        }
-        root.put("players", playersJson);
+        /* bishop-protected seats */
+        JSONArray prot = new JSONArray();
+        for (Player p : g.getBishopProtected()) prot.add(p.getId());
+        root.put("bishopProtectedSeats", prot);
 
-        /* --- district deck (names only) --- */
-        root.put("districtDeck", namesArray(game.getDistrictDeckNames()));
+        /* players */
+        JSONArray players = new JSONArray();
+        for (Player p : g.getPlayers()) players.add(serializePlayer(p));
+        root.put("players", players);
+
+        /* deck order */
+        JSONArray deck = new JSONArray();
+        deck.addAll(g.getDistrictDeckNames());
+        root.put("districtDeck", deck);
 
         return root;
     }
 
-    /* ------------------------------------------------- *
-     * Deserialise from JSON                             *
-     * ------------------------------------------------- */
+    @SuppressWarnings("unchecked")
+    private static JSONObject serializePlayer(Player p) {
+        JSONObject jo = new JSONObject();
+        jo.put("id",        p.getId());
+        jo.put("gold",      p.getGold());
+        jo.put("character", p.getCharacter() == null ? 0
+                                                     : p.getCharacter().getRank());
 
+        JSONArray hand = new JSONArray();
+        for (DistrictCard d : p.getHand()) hand.add(d.getName());
+        jo.put("hand", hand);
+
+        JSONArray city = new JSONArray();
+        for (DistrictCard d : p.getCity()) city.add(d.getName());
+        jo.put("city", city);
+        return jo;
+    }
+
+    /* ============================================================= *
+     *  DESERIALISE                                                  *
+     * ============================================================= */
     public static CitadelsGame deserialise(JSONObject root,
-                                           CommandHandler cli,
+                                           CommandHandler io,
                                            CardRepository repo) {
 
-        int   playerCount = ((JSONArray) root.get("players")).size();
-        int   round       = ((Number)   root.get("round")).intValue();
-        int   crownSeat   = ((Number)   root.get("crownSeat")).intValue();
+        int playerCount = ((JSONArray) root.get("players")).size();
+        CitadelsGame g  = new CitadelsGame(playerCount, io);
 
-        CitadelsGame g = new CitadelsGame(playerCount, cli);
-        g.setRound(round);
-        g.setCrownedSeat(crownSeat);
+        /* basic round / crown */
+        g.setRound( ((Number) root.get("round")).intValue() );
+        g.setCrownedSeat( ((Number) root.get("crownSeat")).intValue() );
 
-        /* ---- restore player-specific state ---- */
-        JSONArray playersJson = (JSONArray) root.get("players");
-        for (Object o : playersJson) {
-            JSONObject pj = (JSONObject) o;
-            Player p = g.getPlayers().get(((Number) pj.get("id")).intValue());
+        /* robbery / kill flags */
+        g.setRobbedRank( ((Number) root.get("robbedRank")).intValue() );
 
-            /* gold */
-            g.gainGold(p, ((Number) pj.get("gold")).intValue() - p.getGold());
+        Set<Integer> killed = new HashSet<>();
+        for (Object o : (JSONArray) root.get("killedRanks"))
+            killed.add(((Number) o).intValue());
+        g.setKilledRanks(killed);
 
-            /* character */
-            int rank = ((Number) pj.get("character")).intValue();
-            if (rank != 0) p.setCharacter(repo.characterByRank(rank));
-
-            /* hand */
-            for (Object n : (JSONArray) pj.get("hand")) {
-                p.addCardToHand(repo.districtByName((String) n));
-            }
-
-            /* city */
-            for (Object n : (JSONArray) pj.get("city")) {
-                p.addDistrictToCity(repo.districtByName((String) n));
-            }
+        /* bishop protected */
+        Set<Player> prot = new HashSet<>();
+        for (Object o : (JSONArray) root.get("bishopProtectedSeats")) {
+            int seat = ((Number) o).intValue();
+            prot.add(g.getPlayer(seat));
         }
+        g.setBishopProtected(prot);
 
-        /* ---- restore deck ---- */
-        List<String> deckNames = (List<String>) (JSONArray) root.get("districtDeck");
-        g.resetDistrictDeck(deckNames.stream()
-                                     .map(repo::districtByName)
-                                     .collect(Collectors.toList()));
+        /* players */
+        JSONArray players = (JSONArray) root.get("players");
+        for (Object o : players) restorePlayer(g, (JSONObject) o, repo);
+
+        /* deck */
+        List<String> deckNames = new ArrayList<>();
+        for (Object o : (JSONArray) root.get("districtDeck"))
+            deckNames.add((String) o);
+        List<DistrictCard> ordered = new ArrayList<>();
+        for (String n : deckNames) ordered.add(repo.districtByName(n));
+        g.resetDistrictDeck(ordered);
+
         return g;
     }
 
-    /* ------------------------------------------------- *
-     * Helpers                                           *
-     * ------------------------------------------------- */
+    private static void restorePlayer(CitadelsGame g,
+                                      JSONObject jo,
+                                      CardRepository repo) {
 
-    @SuppressWarnings("unchecked")
-    private static JSONArray namesArray(List<String> names) {
-        JSONArray a = new JSONArray();
-        a.addAll(names);
-        return a;
+        Player p = g.getPlayer(((Number) jo.get("id")).intValue());
+
+        /* character */
+        int rank = ((Number) jo.get("character")).intValue();
+        if (rank != 0) p.setCharacter(repo.characterByRank(rank));
+
+        /* gold */
+        int gold = ((Number) jo.get("gold")).intValue();
+        p.gainGold(gold - p.getGold());
+
+        /* hand */
+        for (Object o : (JSONArray) jo.get("hand"))
+            p.addCardToHand(repo.districtByName((String) o));
+
+        /* city */
+        for (Object o : (JSONArray) jo.get("city"))
+            p.addDistrictToCity(repo.districtByName((String) o));
     }
 }
