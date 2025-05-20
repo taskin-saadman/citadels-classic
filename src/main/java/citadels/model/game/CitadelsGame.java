@@ -91,6 +91,9 @@ public final class CitadelsGame {
         return players.stream().anyMatch(p -> p.getCity().size() >= 8);
     }
 
+    /**
+     * This method calculates the scores of all players and prints the results.
+     */
     public void scoreAndPrintResults() {
         int firstDone = players.stream()
                 .filter(p -> p.getCity().size() >= 8)
@@ -252,6 +255,45 @@ public final class CitadelsGame {
         while (true) {
             String in = cli.prompt("> ").trim();
             if (in.equalsIgnoreCase("t")) return;
+            if (in.equalsIgnoreCase("all")) {
+                for (Player p : players) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Player ").append(p.getId() + 1);
+                    
+                    // Add "(you)" for the human player
+                    if (p.getId() == 0) {
+                        sb.append(" (you)");
+                    }
+                    
+                    // Add cards count
+                    sb.append(": cards=").append(p.getHand().size());
+                    
+                    // Add gold count
+                    sb.append(" gold=").append(p.getGold());
+                    
+                    // Add city information
+                    sb.append(" city=");
+                    List<DistrictCard> city = p.getCity();
+                    if (city.isEmpty()) {
+                        sb.append("");
+                    } else {
+                        for (int i = 0; i < city.size(); i++) {
+                            DistrictCard card = city.get(i);
+                            sb.append(card.getName())
+                              .append(" [")
+                              .append(card.getColor().toString().toLowerCase())
+                              .append(card.getCost())
+                              .append("]");
+                            if (i < city.size() - 1) {
+                                sb.append(", ");
+                            }
+                        }
+                    }
+                    
+                    cli.println(sb.toString());
+                }
+                continue;
+            }
             cli.println("It is not your turn. Press t to continue with other player turns.");
         }
     }
@@ -332,15 +374,17 @@ public final class CitadelsGame {
 
         cli.println("Pick one of the following cards: 1 or 2.");
         cli.println("1. " + a); cli.println("2. " + b);
+        boolean picked_one = false; //flag to check if the player has picked a card out of 2
         while (true) {
             String in = cli.prompt("> ").trim();
             cli.println("Type '1' or '2'.");
-            if (in.equalsIgnoreCase("1")) {
-                p.addCardToHand(a); districtDeck.putOnBottom(b); break;
+            if (in.equalsIgnoreCase("1") && !picked_one) {
+                p.addCardToHand(a); districtDeck.putOnBottom(b); picked_one = true; break;
             }
-            if (in.equalsIgnoreCase("2")) {
-                p.addCardToHand(b); districtDeck.putOnBottom(a); break;
+            if (in.equalsIgnoreCase("2") && !picked_one) {
+                p.addCardToHand(b); districtDeck.putOnBottom(a); picked_one = true; break;
             }
+            if (picked_one) { cli.println("You already picked one card!"); break; }
         }
     }
 
@@ -457,7 +501,7 @@ public final class CitadelsGame {
     /** Current round number (1-based). */
     public int getRound() { return roundNo; }
 
-    /** Crowned player’s seat index. */
+    /** Crowned player's seat index. */
     public int getCrownedSeat() { return crownedSeat; }
 
     /** Ordered list of the remaining district deck for save. */

@@ -1,0 +1,42 @@
+Name 	Qty	color	cost	text
+Watchtower	3	red	1	
+Prison	3	red	2	
+Battlefield	3	red	3	
+Fortress	2	red	5	
+Manor	5	yellow	3	
+Castle	4	yellow	4	
+Palace	3	yellow	5	
+Tavern	5	green	1	
+Market	4	green	2	
+Trading Post	3	green	2	
+Docks	3	green	3	
+Harbor	3	green	4	
+Town Hall	2	green	5	
+Temple	3	blue	1	
+Church	3	blue	2	
+Monastary	3	blue	3	
+Cathedral	2	blue	5	
+Haunted City	1	purple	2	For the purposes of victory points, the Haunted City is considered to be of the color of your choice.  You cannot use this ability if you built it during the last round of the game
+Keep	2	purple	3	The Keep cannot be destroyed by the Warlord
+Laboratory	1	purple	5	Once during your turn, you may discard a district card from your hand and receive one gold from the bank
+Smithy	1	purple	5	Once during your turn, you may pay two gold to draw 3 district cards.
+Observatory	1	purple	5	If you choose to draw cards when you take an action, you draw 3 cards, keep one of your choice, and put the other 2 on the bottom of the deck
+Graveyard	1	purple	5	When the Warlord destroys a district, you may pay one gold to take the destroyed district into your hand.  You may not do this if you are the Warlord
+Dragon Gate	1	purple	6	This district costs 6 gold to build, but is worth 8 points at the end of the game
+University	1	purple	6	This district costs 6 gold to build, but is worth 8 points at the end of the game
+Library	1	purple	6	If you choose to draw cards you you take an action, you keep both of the cards you have drawn.
+Great Wall	1	purple	6	The cost for the Warlord to destory any of your other districts is increased by one gold
+School Of Magic	1	purple	6	For the purposes of income, the School Of Magic is considered to be the color of your choice.  If you are the King this round, for example, the School is considered to be a noble (yellow) district.
+Lighthouse	1	purple	3	When you place the Lighthouse in your city, you may look through the District Deck, choose one card and add it to your hand.  Shuffle the deck afterwards.
+Armory	1	purple	3	During your turn, you may destroy the Armory in order to destory any other district card of your choice in another player's city
+Museum	1	purple	4	On your turn, you may place on district card from your hand face down under the Museum.  At the end of the game, you score one extra point for every card under the Museum
+Imperial Treasury	1	purple	4	At the end of the game, you score one point for each gold in your possesion.  Gold placed on your district cards do not count towards this total
+Map Room	1	purple	5	At the end of the game, you score one point for each card in your hand.
+Wishing Well	1	purple	5	At the end of the game, you score one point for every OTHER purple district in your city
+Quarry	1	purple	5	When building, you may play a district already found in your city.  You may only have one such duplicate district in your city at any one time
+Poor House	1	purple	5	If you have no gold at the end of your turn, receive one gold from the bank.  Gold placed on your district cards does not count as your gold for this purpose
+Bell Tower	1	purple	5	When you place the Bell Tower in your city, you may announce that the game will end after the round in which a player first places his 7th district.  You may do this even if the Bell Tower is your 7th district.  If the Bell Tower is later destroyed, the game end conditions return to normal
+Factory	1	purple	6	Your cost for building OTHER purple district cards is reduced by one.  This does not affect the Warlord's cost for destroying the card
+Park	1	purple	6	If you have no cards in your hand at the end of your turn, you may draw 2 cards form the District Deck.
+Hospital	1	purple	6	Even if you are assassinated, you may take an action during your turn (but you may not build a district card or use your character's power).
+Throne Room	1	purple	6	Every time the Crown switches players, you receive one gold from the bank.
