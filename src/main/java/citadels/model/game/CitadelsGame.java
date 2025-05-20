@@ -124,7 +124,7 @@ public final class CitadelsGame {
         List<CharacterCard> tray = new ArrayList<>(characterDeck.asListView());
         Collections.shuffle(tray, rng); //shuffle the tray using the random number generator
 
-        //face-up face down logic from game rules
+        //face-up face down logic from game rules (the provided table)
         int faceUp = (players.size() == 4) ? 2 :
                      (players.size() == 5) ? 1 : 0;
 
@@ -136,23 +136,23 @@ public final class CitadelsGame {
             up = new ArrayList<>(); //List to store the face-up cards during Selection Phase
             Iterator<CharacterCard> it = pool.iterator();
             for (int i = 0; i < faceUp && it.hasNext(); i++) up.add(it.next());
-            it.next();                              // one face-down
-            while (it.hasNext()) chars.add(it.next());
+            it.next();          // one face-down irrespective of the number of players
+            while (it.hasNext()) chars.add(it.next()); //add the remaining cards to the pool
 
-            if (up.stream().anyMatch(King.class::isInstance)){ //if the face-up cards include a king, clear the pool
+            if (up.stream().anyMatch(King.class::isInstance)){ //if the face-up cards include King, clear the pool
                 System.out.println("The King cannot be visibly removed, trying again..");
-                chars.clear();
+                chars.clear(); //clear the pool
             } 
-            else break;
+            else break; //else break
         }
 
         for (CharacterCard c : up) {
             cli.println(c.getName() + " was removed.");
         }
-        cli.println("A mystery character was removed.");
+        cli.println("A mystery character was removed."); //1 facedown card irrespective of no. of players
         waitForHumanT();
 
-        int seat = crownedSeat;
+        int seat = crownedSeat; //index of the player who is crowned in current round
         List<CharacterCard> passing = new ArrayList<>(chars);
 
         for (int i = 0; i < players.size(); i++) {
@@ -169,9 +169,8 @@ public final class CitadelsGame {
 
             p.setCharacter(chosen);
             cli.println("Player " + (seat+1) + " chose a character.");
-            waitForHumanT();
 
-            seat = (seat + 1) % players.size();
+            seat = (seat + 1) % players.size(); // seat resets to 0 after last player
         }
 
     /* ================================================================ *
@@ -186,7 +185,7 @@ public final class CitadelsGame {
 
     private CharacterCard humanChooseCharacter(List<CharacterCard> pool) {
         while (true) {
-            String in = cli.prompt("> ").trim();
+            String in = cli.prompt("> ").trim(); //trim means
             for (CharacterCard c : pool)
                 if (c.getName().equalsIgnoreCase(in)) {
                     pool.remove(c); return c;
@@ -216,7 +215,6 @@ public final class CitadelsGame {
 
             cli.println("Player " + (acting.getId()+1) +
                         " is the " + rankName(rank));
-            waitForHumanT();
 
             if (rank == 4) crownedSeat = acting.getId(); // King crown
 
@@ -225,14 +223,15 @@ public final class CitadelsGame {
             if (rank == robbedRank && thiefPlayer != null && thiefPlayer != acting) {
                 int stolen = acting.getGold();
                 acting.spendGold(stolen);
-                thiefPlayer.gainGold(stolen);
+                thiefPlayer.gainGold(stolen);   
                 cli.println("The Thief steals " + stolen + " gold.");
                 waitForHumanT();
             }
 
             if (acting instanceof HumanPlayer) {
-                cli.println("Your turn.");
-                waitForHumanT();
+                cli.println("Your turn.\nCollect 2 gold or draw two cards and pick one [gold/cards]:");
+                //add specific character ability message here
+
             }
 
             acting.takeTurn(this);
@@ -331,17 +330,17 @@ public final class CitadelsGame {
             return;
         }
 
-        cli.println("Pick one of the following cards: 'collect card <1|2>'.");
+        cli.println("Pick one of the following cards: 1 or 2.");
         cli.println("1. " + a); cli.println("2. " + b);
         while (true) {
             String in = cli.prompt("> ").trim();
-            if (in.equalsIgnoreCase("collect card 1")) {
+            cli.println("Type '1' or '2'.");
+            if (in.equalsIgnoreCase("1")) {
                 p.addCardToHand(a); districtDeck.putOnBottom(b); break;
             }
-            if (in.equalsIgnoreCase("collect card 2")) {
+            if (in.equalsIgnoreCase("2")) {
                 p.addCardToHand(b); districtDeck.putOnBottom(a); break;
             }
-            cli.println("Type 'collect card 1' or 'collect card 2'");
         }
     }
 

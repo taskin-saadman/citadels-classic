@@ -25,7 +25,7 @@ public final class TSVLoader {
 
         List<DistrictCard> deck = new ArrayList<>();
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"))) {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();

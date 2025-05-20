@@ -105,7 +105,7 @@ public final class AIPlayer extends Player {
        =========================================================== */
 
     /* ---------- Assassin (kill) ---------- */
-    private void assassinTurn(CitadelsGame game) {
+    private void assassinTurn(CitadelsGame game) { //prioritizes killing the richest opponent
         Player target = richestOpponent(game, this);
         int victimRank = (target == null || target.getCharacter() == null)
                 ? RNG.nextInt(7) + 2   // random 2-8
@@ -114,7 +114,7 @@ public final class AIPlayer extends Player {
     }
 
     /* ---------- Thief (rob) -------------- */
-    private void thiefTurn(CitadelsGame game) {
+    private void thiefTurn(CitadelsGame game) { //prioritizes robbing the richest opponent
         Player target = richestOpponent(game, this);
         int victimRank = (target == null || target.getCharacter() == null)
                 ? RNG.nextInt(6) + 3   // random 3-8
@@ -123,7 +123,7 @@ public final class AIPlayer extends Player {
     }
 
     /* ---------- Magician ----------------- */
-    private void magicianPostBuild(CitadelsGame game) {
+    private void magicianPostBuild(CitadelsGame game) { //prioritizes swapping hands with the richest player
         // if another player has ≥2 more cards, swap; else redraw duplicates
         Player richestHand = game.getPlayers().stream()
                 .filter(p -> p != this)
