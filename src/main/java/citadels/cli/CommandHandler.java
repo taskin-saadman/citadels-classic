@@ -3,13 +3,14 @@ package citadels.cli;
 import citadels.model.card.*;
 import citadels.model.game.CitadelsGame;
 import citadels.model.player.Player;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import org.json.simple.JSONObject; // used for saving and loading
+import org.json.simple.parser.JSONParser; // used for loading
 
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+
 
 public interface CommandHandler {
 
@@ -22,11 +23,11 @@ public interface CommandHandler {
      * ------------------------------------------------------------------ */
     default void humanTurnLoop(Player human) {
 
-        ConsoleHandler io   = (ConsoleHandler) this;
-        CitadelsGame   game = io.getGame();
+        ConsoleHandler io   = (ConsoleHandler) this; 
+        CitadelsGame   game = io.getGame(); // gets the current game
 
-        loop:
-        while (true) {
+        loop: // label for the loop (easy to break out of)
+        while(true) {
             Command cmd = CommandParser.parse(prompt("> "));
 
             switch (cmd.keyword()) {
@@ -146,7 +147,7 @@ public interface CommandHandler {
         }
 
         switch (rank) {
-            case 1: // Assassin
+            case 1: // Assassin (enters "kill <2-8>")
                 if (args.size() == 2 && "kill".equalsIgnoreCase(args.get(0))) {
                     int r = parseRank(args.get(1));
                     if (r >= 2 && r <= 8) {
@@ -227,19 +228,26 @@ public interface CommandHandler {
     }
 
     static void printHelp() {
-        System.out.println("Available commands:");
-        System.out.println("  t / end              finish your turn");
-        System.out.println("  hand                 show cards & gold");
-        System.out.println("  collect gold         take 2 gold");
-        System.out.println("  cards                draw 2 cards (Library keeps both)");
-        System.out.println("  build <n>            build hand card #n");
-        System.out.println("  city                 show your city");
-        System.out.println("  action ...           perform your character ability");
-        System.out.println("  info <x>             details on card or character");
-        System.out.println("  save <file>          save game");
-        System.out.println("  load <file>          load game");
-        System.out.println("  debug                toggle AI hand visibility");
-    }
+    System.out.println("Available commands:");
+    System.out.println("  t / end              finish your turn");
+    System.out.println("  hand                 show cards & gold");
+    System.out.println("  collect gold         take 2 gold");
+    System.out.println("  cards                draw 2 cards (Library keeps both)");
+    System.out.println("  build <n>            build hand card #n");
+    System.out.println("  city                 show your city");
+
+    // ─── Character abilities ───────────────────────────────────────────────
+    System.out.println("  action ...           perform your character ability");
+    System.out.println("      - steal <3-8>        (Thief)");
+    System.out.println("      - swap | discard     (Magician)");
+    System.out.println("      - demolish <n>       (Warlord)");
+
+    System.out.println("  info <x>             details on card or character");
+    System.out.println("  save <file>          save game");
+    System.out.println("  load <file>          load game");
+    System.out.println("  debug                toggle AI hand visibility");
+}
+
 
     static int parseRank(String s) {
         return parseInt(s, -1);

@@ -122,8 +122,9 @@ public final class CitadelsGame {
         waitForHumanT();
 
         List<CharacterCard> tray = new ArrayList<>(characterDeck.asListView());
-        Collections.shuffle(tray, rng);
+        Collections.shuffle(tray, rng); //shuffle the tray using the random number generator
 
+        //face-up face down logic from game rules
         int faceUp = (players.size() == 4) ? 2 :
                      (players.size() == 5) ? 1 : 0;
 
@@ -132,13 +133,16 @@ public final class CitadelsGame {
             pool = new ArrayList<>(tray);
             Collections.shuffle(pool, rng);
 
-            up = new ArrayList<>();
+            up = new ArrayList<>(); //List to store the face-up cards during Selection Phase
             Iterator<CharacterCard> it = pool.iterator();
             for (int i = 0; i < faceUp && it.hasNext(); i++) up.add(it.next());
             it.next();                              // one face-down
             while (it.hasNext()) chars.add(it.next());
 
-            if (up.stream().anyMatch(King.class::isInstance)) chars.clear();
+            if (up.stream().anyMatch(King.class::isInstance)){ //if the face-up cards include a king, clear the pool
+                System.out.println("The King cannot be visibly removed, trying again..");
+                chars.clear();
+            } 
             else break;
         }
 
@@ -198,7 +202,6 @@ public final class CitadelsGame {
             Player acting = findPlayerByRank(rank);
 
             cli.println(rank + ": " + rankName(rank));
-            waitForHumanT();
 
             if (killedRanks.contains(rank)) {
                 cli.println("Character was killed - skipping turn.");

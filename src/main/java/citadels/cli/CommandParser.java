@@ -3,13 +3,12 @@ package citadels.cli;
 import java.util.*;
 
 /** Very lenient split on whitespace – keeps quoted substrings intact. */
+//purpose: parse the command line input
 public final class CommandParser {
-
-    private CommandParser() {}
 
     public static Command parse(String raw) {
         raw = raw.trim();
-        if (raw.isEmpty()) return Command.of("", Collections.emptyList());
+        if (raw.isEmpty()) return Command.of("", Collections.emptyList()); 
 
         List<String> out = new ArrayList<>();
         StringBuilder sb = new StringBuilder();

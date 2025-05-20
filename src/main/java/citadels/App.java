@@ -5,17 +5,6 @@ import citadels.model.game.CitadelsGame;
 
 /**
  * Entry-point for the Citadels Classic CLI application.
- *
- * <p>Runs exactly in the order shown in the assignment PDF:</p>
- * <pre>
- * Enter how many players [4-7]:
- * &gt; 6
- * Shuffling deck...
- * Adding characters...
- * Dealing cards...
- * Starting Citadels with 6 players...
- * You are player 1
- * </pre>
  */
 public final class App {
 

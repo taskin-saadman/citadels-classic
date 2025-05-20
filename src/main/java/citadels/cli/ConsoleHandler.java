@@ -13,7 +13,7 @@ public final class ConsoleHandler implements CommandHandler {
 
     /* ---- wiring ---- */
     public void attachGame(CitadelsGame g) { this.game = g; }
-    public CitadelsGame getGame()          { return game; }
+    public CitadelsGame getGame() { return game; }
 
     /* ---- debug ---- */
     public void toggleDebug()  { debug = !debug; }
