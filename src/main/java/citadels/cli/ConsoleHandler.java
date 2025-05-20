@@ -16,7 +16,10 @@ public final class ConsoleHandler implements CommandHandler {
     public CitadelsGame getGame() { return game; }
 
     /* ---- debug ---- */
-    public void toggleDebug()  { debug = !debug; }
+    public void toggleDebug()  { 
+        debug = !debug;
+        if (!debug) println("Disabled debug mode. You will no longer see all player’s hands.");
+     }
 
         /* ------------------------------------------------------------------ *
      *  Prompt for player count (4-7)                                     *

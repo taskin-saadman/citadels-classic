@@ -127,7 +127,7 @@ public interface CommandHandler {
                 sb.append("Player ").append(p.getId() + 1);
                 
                 // Add "(you)" for the human player
-                if (p == human) {
+                if (p.getId() == 0) {  // Human player is always player 0
                     sb.append(" (you)");
                 }
                 
@@ -176,6 +176,8 @@ public interface CommandHandler {
 
     /* ---------------- collect / draw ---------------------- */
     case "cards":
+        if (gold_collected) { println("You already chose to collect 2 gold!");
+        break;}
         game.drawTwoChoose(human);
         break;
 
