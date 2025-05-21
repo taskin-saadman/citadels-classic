@@ -18,7 +18,8 @@ public final class ConsoleHandler implements CommandHandler {
     /* ---- debug ---- */
     public void toggleDebug()  { 
         debug = !debug;
-        if (!debug) println("Disabled debug mode. You will no longer see all player’s hands.");
+        if (!debug) println("Disabled debug mode. You will no longer see all player's hands.");
+        if (debug) println("Enabled debug mode. You will now see all player's hands.");
      }
 
         /* ------------------------------------------------------------------ *

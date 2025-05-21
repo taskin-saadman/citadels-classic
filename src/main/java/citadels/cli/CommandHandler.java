@@ -26,7 +26,7 @@ public interface CommandHandler {
         ConsoleHandler io   = (ConsoleHandler) this;
         CitadelsGame   game = io.getGame();
 
-        boolean gold_collected = false; //will be used for first time gold collection by player 1
+        boolean collected_resources = false; //will be used for the round's 2 gold collection by player 1
         boolean initial_choice_prompt_given = false; //will be used for initial choice prompt
         loop: // label for the loop (easy to break out of)
         while(true) {
@@ -54,11 +54,8 @@ public interface CommandHandler {
         break;
 
     case "gold": {
-        if (!gold_collected) { //first time collection command in a round
-            game.collectGold(human);
-            gold_collected = true;
-            break;
-        }
+        //first time collection command in a round
+        if (!collected_resources) {game.collectGold(human); collected_resources = true; break;}
 
         //rest part is to check current gold count after user either collected gold or drew 2 district cards
         int seat = cmd.args().isEmpty()
@@ -176,9 +173,9 @@ public interface CommandHandler {
 
     /* ---------------- collect / draw ---------------------- */
     case "cards":
-        if (gold_collected) { println("You already chose to collect 2 gold!");
-        break;}
+        if (collected_resources) { println("You already gathered resources this round!"); break;}
         game.drawTwoChoose(human);
+        collected_resources = true;
         break;
 
     /* ---------------- save / load ------------------------- */
@@ -213,6 +210,9 @@ public interface CommandHandler {
 
         }
     }
+
+
+
 
     /* -------------------------------------------------------- *
      *  Action command handler (Thief, Magician, etc.)          *

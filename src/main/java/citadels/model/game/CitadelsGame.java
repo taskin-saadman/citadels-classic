@@ -78,7 +78,7 @@ public final class CitadelsGame {
 
         /* End-of-round line */
         cli.println("Everyone is done, new round!");
-        waitForHumanT();
+        waitForHumanT(); //wait to press t after round ends
 
         roundNo++;
         killedRanks.clear();
@@ -233,8 +233,7 @@ public final class CitadelsGame {
 
             if (acting instanceof HumanPlayer) {
                 cli.println("Your turn.\nCollect 2 gold or draw two cards and pick one [gold/cards]:");
-                //add specific character ability message here
-
+                //add specific character ability message/ message method here
             }
 
             acting.takeTurn(this);
@@ -250,12 +249,14 @@ public final class CitadelsGame {
     /* ================================================================ *
      *  Wait helper (PDF-style gating)                                  *
      * ================================================================ */
+
+    // handles if the user pressess t to continue
     private void waitForHumanT() {
         if (!(cli instanceof ConsoleHandler)) return;
         while (true) {
             String in = cli.prompt("> ").trim();
             if (in.equalsIgnoreCase("t")) return;
-            if (in.equalsIgnoreCase("all")) {
+            if (in.equalsIgnoreCase("all")) { //all can be used at any time
                 for (Player p : players) {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Player ").append(p.getId() + 1);
@@ -292,6 +293,10 @@ public final class CitadelsGame {
                     
                     cli.println(sb.toString());
                 }
+                continue;
+            }
+            if (in.equalsIgnoreCase("debug")) { //debug can be used at any time
+                ((ConsoleHandler)cli).toggleDebug();
                 continue;
             }
             cli.println("It is not your turn. Press t to continue with other player turns.");
@@ -354,37 +359,50 @@ public final class CitadelsGame {
             p.addCardToHand(districtDeck.draw());
     }
 
+    boolean picked_one = false; //flag to check if the player has already picked a card out of 2
+
+    /**
+     * Draws two cards and allows the player to pick one.
+     * If the player is an AI, it will pick the card with the lower cost.
+     * If the player is a human, it will prompt the player to pick one.
+     * @param p the player to draw the cards for
+     */
     public void drawTwoChoose(Player p) {
         if (districtDeck.size() < 2) { drawCards(p, 2); return; }
+        //the 2 cards from which either 1 is drawn or if player has library, both are drawn
         DistrictCard a = districtDeck.draw();
         DistrictCard b = districtDeck.draw();
 
+        // check if the player has a library in their city (library purple card effect)
         boolean hasLib = p.getCity().stream().anyMatch(DistrictCard::isLibrary);
         if (hasLib) {
             p.addCardToHand(a); p.addCardToHand(b);
             cli.println("Library effect: kept both.");
             return;
         }
-
+        /* if the player is an AI, add the card with the lower cost to the player's hand
+        and put the other card at the bottom of the deck*/
         if (p instanceof AIPlayer) {
             p.addCardToHand(a.getCost() >= b.getCost() ? a : b);
             districtDeck.putOnBottom(a.getCost() >= b.getCost() ? b : a);
             return;
         }
 
-        cli.println("Pick one of the following cards: 1 or 2.");
-        cli.println("1. " + a); cli.println("2. " + b);
-        boolean picked_one = false; //flag to check if the player has picked a card out of 2
+        cli.println("Pick one of the following cards: 1 or 2.\n1. " + a + "\n2. " + b);
+        
         while (true) {
             String in = cli.prompt("> ").trim();
-            cli.println("Type '1' or '2'.");
-            if (in.equalsIgnoreCase("1") && !picked_one) {
-                p.addCardToHand(a); districtDeck.putOnBottom(b); picked_one = true; break;
+            //player can see info about the cards which they can pick
+            if(in.startsWith("info")) {
+                if(in.equals("info 1")) { CommandHandler.printDistrictInfo(a); }
+                if(in.equals("info 2")) { CommandHandler.printDistrictInfo(b); }
+                continue;
             }
-            if (in.equalsIgnoreCase("2") && !picked_one) {
-                p.addCardToHand(b); districtDeck.putOnBottom(a); picked_one = true; break;
-            }
-            if (picked_one) { cli.println("You already picked one card!"); break; }
+            // pick the chosen card and put the other one at the bottom of the deck
+            if (in.equals("1") && !picked_one) {p.addCardToHand(a); districtDeck.putOnBottom(b); picked_one = true; return;}
+            if (in.equals("2") && !picked_one) {p.addCardToHand(b); districtDeck.putOnBottom(a); picked_one = true; return;}
+            if (picked_one) { cli.println("You already picked one card!"); return; }
+            cli.println("Invalid input, enter '1' or '2'.");
         }
     }
 
