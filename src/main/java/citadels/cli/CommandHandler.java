@@ -42,6 +42,15 @@ public interface CommandHandler {
         println("You ended your turn.");
         break loop; //break out of the infinite while loop
 
+    case "quit":
+        System.out.println("Do you want to save the game before quitting? (y/n)");
+        String save = prompt("");
+        if (save.equalsIgnoreCase("y")) {
+            saveGame(game, "saved_game.json");
+        }
+        System.exit(0);
+        break;
+
     /* ------------------------------------------------------ */
     case "hand":
         println("You have " + human.getGold() + " gold. Cards in hand:");
@@ -181,7 +190,7 @@ public interface CommandHandler {
     /* ---------------- save / load ------------------------- */
     case "save":
         if (cmd.args().isEmpty()) {
-            println("save <file>");
+            println("save <file_name>");
             break;
         }
         saveGame(game, cmd.arg(0, ""));
@@ -189,7 +198,7 @@ public interface CommandHandler {
 
     case "load":
         if (cmd.args().isEmpty()) {
-            println("load <file>");
+            println("load <file_name>");
             break;
         }
         CitadelsGame newG = loadGame(cmd.arg(0, ""), io);
@@ -224,7 +233,6 @@ public interface CommandHandler {
         int rank = ch.getRank();
 
         if (args.isEmpty()) {
-            println("Usage depends on your character:");
             println(actionHelp(ch));
             return;
         }
@@ -235,7 +243,7 @@ public interface CommandHandler {
                     int r = parseRank(args.get(1));
                     if (r >= 2 && r <= 8) {
                         game.killCharacter(r);
-                        println("You chose to kill rank " + r + ".");
+                        println("You chose to kill the " + game.rankName(r) + ".");
                     } else println("Rank must be 2-8.");
                 } else println("Format: action kill <2-8>");
                 break;
@@ -245,7 +253,7 @@ public interface CommandHandler {
                     int r = parseRank(args.get(1));
                     if (r >= 3 && r <= 8) {
                         game.setRobTarget(human, r);
-                        println("You chose to steal from rank " + r + ".");
+                        println("You chose to steal from the " + game.rankName(r) + ".");
                     } else println("Rank must be 3-8.");
                 } else println("Format: action steal <3-8>");
                 break;
@@ -296,22 +304,27 @@ public interface CommandHandler {
         }
     }
 
+    /**
+     * This method returns a string that contains the help message for the action command
+     * @param ch
+     * @return
+     */
     static String actionHelp(CharacterCard ch) {
         switch (ch.getRank()) {
-            case 1:  return "Who do you want to kill? Choose a character from 2-8:";
-            case 2:  return "Who do you want to steal from? Choose a character from 3-8:";
-            case 3:  return "choose action [swap/redraw/none]:";
+            case 1:  return "Who do you want to kill? Choose a character from 2-8:\nformat: action kill <2-8>";
+            case 2:  return "Who do you want to steal from? Choose a character from 3-8:\nformat: action steal <3-8>";
+            case 3:  return "choose action [swap/redraw/none]:\nformat: action swap <player#> OR action redraw <idx,idx,...>";
             case 4:  return "Automatic: gains gold for yellow districts and takes crown";
             case 5:  return "Automatic: gains gold for blue districts and gets immunity";
-            case 6:  return "Automatic: gains gold for green districts + 1 extra gold";
-            case 7:  return "Automatic: draws 2 extra cards and may build 3 districts";
-            case 8:  return "Destroy a district? [y/N]:";
+            case 6:  return "Automatic: gains gold for green districts + 1 extra gold\nformat: action none";
+            case 7:  return "Automatic: draws 2 extra cards and may build 3 districts\nformat: action none";
+            case 8:  return "Destroy a district? [y/N]\nformat: action destroy <player#> <district#>";
             default: return "";
         }
     }
 
     static void printHelp() {
-        System.out.println("Available commands:");
+        System.out.println("---AVAILABLE COMMANDS---");
         System.out.println("info : show information about a character or building");
         System.out.println("t : processes turns");
         System.out.println("all : shows all current game info");
@@ -321,6 +334,11 @@ public interface CommandHandler {
         System.out.println("build <place in hand> : Builds a building into your city");
         System.out.println("action : Gives info about your special action and how to perform it");
         System.out.println("end : Ends your turn");
+        System.out.println("save <file_name> : Saves the game to a file in JSON format in 'saved games' folder");
+        System.out.println("load <file_name> : Loads the game from a file in JSON format in 'saved games' folder");
+        System.out.println("debug : Toggles debug mode");
+        System.out.println("quit : Quits the game");
+        System.out.println("--------------------------------");
     }
 
     static int parseRank(String s) {
@@ -359,23 +377,34 @@ public interface CommandHandler {
                         : " - " + d.getSpecialText()));
     }
 
+    /**
+     * Saves the game to a file in JSON format in "saved games" folder
+     * @param g the game to save
+     * @param file the file to save the game to
+     */
     static void saveGame(CitadelsGame g, String file) {
-        try (FileWriter fw = new FileWriter(file)) {
-            JSONObject js = citadels.model.game.GameState.serialise(g);
-            js.writeJSONString(fw);
-            System.out.println("Game saved to " + file);
-        } catch (IOException e) {
+        try (FileWriter fw = new FileWriter(file + ".json")) {
+            JSONObject js = citadels.model.game.GameState.serialise(g); 
+            js.writeJSONString(fw); 
+            System.out.println("Game saved successfully as " + file + ".json");
+        } catch (IOException e) { //if the file is not found or cannot be written to
             System.out.println("Save failed: " + e.getMessage());
         }
     }
 
+    /**
+     * Loads the game from a file in JSON format
+     * @param file the file to load the game from
+     * @param io the console handler
+     * @return the loaded game
+     */
     static CitadelsGame loadGame(String file, ConsoleHandler io) {
         try (FileReader fr = new FileReader(file)) {
             JSONObject js = (JSONObject) new JSONParser().parse(fr);
             CitadelsGame g = citadels.model.game.GameState.deserialise(js, io, io.cardRepo());
             System.out.println("Game loaded.");
             return g;
-        } catch (Exception e) {
+        } catch (Exception e) { //if the file is not found or cannot be read
             System.out.println("Load failed: " + e.getMessage());
             return null;
         }

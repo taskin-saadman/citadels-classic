@@ -25,6 +25,14 @@ public final class ConsoleHandler implements CommandHandler {
         /* ------------------------------------------------------------------ *
      *  Prompt for player count (4-7)                                     *
      * ------------------------------------------------------------------ */
+
+     //make a method to prompt for loading game (later)
+     ////////////////////////////////////////////////////////////////
+
+    /**
+     * Prompts the user to enter the number of players (4-7)
+     * @return the number of players
+     */
     public int askPlayers() {
         while (true) {
             try {

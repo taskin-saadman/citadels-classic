@@ -66,6 +66,10 @@ public final class CitadelsGame {
     /* ================================================================ *
      *  Engine control                                                   *
      * ================================================================ */
+
+    /**
+     * Plays a round of the game
+     */
     public void playRound() {
 
         /* crowned player / press-t gating (like PDF) */
@@ -87,6 +91,10 @@ public final class CitadelsGame {
         bishopProtected.clear();
     }
 
+    /**
+     * Checks if the game is over
+     * @return true if the game is over, false otherwise
+     */
     public boolean isGameOver() {
         return players.stream().anyMatch(p -> p.getCity().size() >= 8);
     }
@@ -110,12 +118,16 @@ public final class CitadelsGame {
             cli.println("Congratulations Player " +
                     (winners.get(0).getId()+1) + "!");
         else
-            cli.println("Tie game — break tie by highest last-round rank.");
+            cli.println("Tie game: break tie by highest last-round rank.");
     }
 
     /* ================================================================ *
      *  Selection phase                                                  *
      * ================================================================ */
+
+    /**
+     * Plays the selection phase
+     */
     private void selectionPhase() {
         phase = GamePhase.SELECTION;
 
@@ -233,11 +245,12 @@ public final class CitadelsGame {
 
             if (acting instanceof HumanPlayer) {
                 cli.println("Your turn.\nCollect 2 gold or draw two cards and pick one [gold/cards]:");
-                //add specific character ability message/ message method here
+                //***add specific character ability message/ message method here***
             }
 
             acting.takeTurn(this);
 
+            //if debug is on and the player is an AI, print the hand of the player
             if (cli instanceof ConsoleHandler && ((ConsoleHandler)cli).isDebug()
                     && acting instanceof AIPlayer)
                 cli.println("Debug: " + acting.getHand());
@@ -247,16 +260,18 @@ public final class CitadelsGame {
     }
 
     /* ================================================================ *
-     *  Wait helper (PDF-style gating)                                  *
+     *  Wait helper                                                     *
      * ================================================================ */
 
-    // handles if the user pressess t to continue
+    /**
+     * Waits for the human player to press t to continue
+     */
     private void waitForHumanT() {
-        if (!(cli instanceof ConsoleHandler)) return;
+        //if (!(cli instanceof ConsoleHandler)) return;
         while (true) {
             String in = cli.prompt("> ").trim();
-            if (in.equalsIgnoreCase("t")) return;
-            if (in.equalsIgnoreCase("all")) { //all can be used at any time
+            if (in.equalsIgnoreCase("t")) return; //t was pressed
+            if (in.equalsIgnoreCase("all")) { //"all" can be used at any time
                 for (Player p : players) {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Player ").append(p.getId() + 1);
@@ -295,7 +310,8 @@ public final class CitadelsGame {
                 }
                 continue;
             }
-            if (in.equalsIgnoreCase("debug")) { //debug can be used at any time
+
+            if (in.equalsIgnoreCase("debug")) { //"debug" can be used at any time
                 ((ConsoleHandler)cli).toggleDebug();
                 continue;
             }
@@ -306,6 +322,12 @@ public final class CitadelsGame {
     /* ================================================================ *
      *  Helper look-ups                                                 *
      * ================================================================ */
+
+    /**
+     * Finds the player with the given rank
+     * @param rank the rank of the player to find
+     * @return the player with the given rank
+     */
     private Player findPlayerByRank(int rank) {
         return players.stream()
                 .filter(p -> p.getCharacter() != null
@@ -313,6 +335,11 @@ public final class CitadelsGame {
                 .findFirst().orElse(null);
     }
 
+    /**
+     * Returns the name of the character with the given rank
+     * @param r the rank of the character
+     * @return the name of the character
+     */
     public static String rankName(int r) {
         switch (r) {
             case 1: return "Assassin";
@@ -327,7 +354,11 @@ public final class CitadelsGame {
         }
     }
 
-    /** Returns the CharacterCard prototype for the given rank (1-8). */
+    /**
+     * Returns the CharacterCard prototype for the given rank (1-8).
+     * @param rank the rank of the character
+     * @return the CharacterCard prototype
+     */
     public citadels.model.card.CharacterCard findCharacterCard(int rank) {
         for (citadels.model.card.CharacterCard c : characterDeck.asListView())
             if (c.getRank() == rank) return c;
@@ -340,13 +371,28 @@ public final class CitadelsGame {
      * ------------------------------------------------- */
 
     /* -- generic economy helpers -- */
+
+    /**
+     * Collects 2 gold for the player during beginning choice (draw card or collect gold)
+     * @param p the player to collect the gold for
+     */
     public void collectGold(Player p) {
         p.gainGold(2);
         cli.println("Player " + (p.getId()+1) + " collected 2 gold.");
     }
 
+    /**
+     * Gains gold for the player
+     * @param p the player to gain the gold for
+     * @param n the amount of gold to gain
+     */
     public void gainGold(Player p, int n) { p.gainGold(n); }
 
+    /**
+     * Gains gold for the player based on the color of the district 
+     * @param p the player to gain the gold for
+     * @param color the color of the district
+     */
     public void gainGoldForColor(Player p, DistrictColor color) {
         long n = p.getCity().stream()
                 .filter(d -> d.getColor()==color || d.isSchoolOfMagic())
@@ -354,6 +400,11 @@ public final class CitadelsGame {
         p.gainGold((int) n);
     }
 
+    /**
+     * Draws cards for the player
+     * @param p the player to draw the cards for
+     * @param n the number of cards to draw
+     */
     public void drawCards(Player p, int n) {
         for (int i = 0; i < n && !districtDeck.isEmpty(); i++)
             p.addCardToHand(districtDeck.draw());
@@ -406,51 +457,126 @@ public final class CitadelsGame {
         }
     }
 
+    /**
+     * Builds a district for the player
+     * @param p the player to build the district for
+     * @param card the district card to build
+     */
     public void buildDistrict(Player p, DistrictCard card) {
+        //cannot build a district if the player already has it
         if (p.getCity().stream().anyMatch(d -> d.getName().equals(card.getName()))) {
             cli.println("You already have that district."); return;
         }
+        //cannot afford the district
         if (!p.spendGold(card.getCost())) { cli.println("Cannot afford."); return; }
+        //remove card from hand and add to city
         p.getHand().remove(card);
         p.addDistrictToCity(card);
         cli.println("Built " + card);
     }
 
     /* -- character-specific helpers -- */
+
+    /**
+     * Kills a character
+     * @param rank the rank of the character to kill
+     */
     public void killCharacter(int rank) { killedRanks.add(rank); }
+
+    /**
+     * Sets the target for the thief
+     * @param thief the player who is the thief
+     * @param rank the rank of the character to steal from
+     */
     public void setRobTarget(Player thief, int rank) {
         thiefPlayer = thief; robbedRank = rank;
     }
+
+    /**
+     * Swaps the hands of two players (magician ability)
+     * @param a the first player
+     * @param b the second player
+     */
     public void swapHands(Player a, Player b) {
+        //store the hand of player a in a temporary list
         List<DistrictCard> tmp = new ArrayList<>(a.getHand());
+        //clear the hand of player a and add the hand of player b to it
         a.getHand().clear(); a.getHand().addAll(b.getHand());
+        //clear the hand of player b and add the temporary list to it
         b.getHand().clear(); b.getHand().addAll(tmp);
     }
+
+    /**
+     * Destroys a district
+     * @param attacker the player who is attacking
+     * @param victim the player who is being attacked
+     * @param idx the index of the district to destroy
+     */
     public void destroyDistrict(Player attacker, Player victim, int idx) {
-        if (idx<0||idx>=victim.getCity().size()) return;
+        //invalid input
+        if (idx<0||idx>=victim.getCity().size()) { cli.println("Invalid index. Enter a number between 1 and " + victim.getCity().size() + "."); return; }
+        //warlord cannot destroy bishop's district
         if (bishopProtected.contains(victim)) { cli.println("Protected by Bishop."); return; }
+        //get the district to destroy
         DistrictCard d = victim.getCity().get(idx);
+        //calculate the cost to destroy the district (cost of district - 1)
         int cost = Math.max(0, d.getCost() - 1);
+        //not enough gold
         if (!attacker.spendGold(cost)) { cli.println("Not enough gold."); return; }
+        //remove the district from the city
         victim.getCity().remove(idx);
         cli.println("Destroyed " + d.getName() + " in Player " +
                 (victim.getId()+1) + "'s city.");
     }
+
+    /**
+     * Takes the crown
+     * @param p the player who is taking the crown
+     */
     public void takeCrown(Player p) {
         crownedSeat = p.getId();
         cli.println("Player " + (p.getId()+1) + " receives the crown.");
     }
+
+    /**
+     * Sets the build limit for the player (for architect ability)
+     * @param p the player to set the build limit for
+     * @param limit the limit to set
+     */
     public void setBuildLimit(Player p, int limit) {
-        builtThisTurn.put(p, -limit);             // negative = may build up to N
+        builtThisTurn.put(p, -limit); //-limit = may build up to limit
     }
+
+    /**
+     * Checks if the player is protected by the bishop
+     * @param p the player to check
+     * @return true if the player is protected by the bishop, false otherwise
+     */
     public boolean isBishopProtected(Player p) { return bishopProtected.contains(p); }
+
+    /**
+     * Sets the bishop protection for the player if they chose bishop character
+     * @param p the player to set the bishop protection for
+     * @param on true if the player is protected by the bishop, false otherwise
+     */
     public void setBishopProtection(Player p, boolean on) {
         if (on) bishopProtected.add(p); else bishopProtected.remove(p);
     }
 
     /* -- prompt helpers for Human players -- */
+
+    /**
+     * Prompts the player to select a character
+     * @param actor the player who is selecting the character
+     * @param from the starting rank of the character
+     * @param to the ending rank of the character
+     * @param verb the verb to use in the prompt
+     * @return the rank of the selected character
+     */
     public int promptCharacterSelection(Player actor, int from,int to,String verb) {
+        //if the player is an AI, return a random character
         if (actor instanceof AIPlayer) return from + rng.nextInt(to-from+1);
+        //if human player
         while (true) {
             String in = cli.prompt("Who do you want to "+verb+
                     "? Choose a character from "+from+"-"+to+":\n> ");
@@ -460,16 +586,33 @@ public final class CitadelsGame {
             cli.println("Please enter a number between "+from+" and "+to+".");
         }
     }
+
+    /**
+     * Prompts the player to select a player
+     * @param actor the player who is selecting the player
+     * @param q the question to prompt the player with
+     * @return the player who is selected
+     */
     public Player promptPlayerSelection(Player actor,String q) {
+        //if the player is an AI, return a random player
         if (actor instanceof AIPlayer) return players.get(rng.nextInt(players.size()));
+        //if human player
         while (true) {
             String in=cli.prompt(q+" (1-"+players.size()+"):\n> ");
+
             try { int seat=Integer.parseInt(in.trim())-1;
                 if (seat>=0&&seat<players.size()) return players.get(seat);
             } catch (NumberFormatException ignored) { }
             cli.println("Invalid player number.");
         }
     }
+
+    /**
+     * Prompts the player who chose Warlord to select a district
+     * @param victim the player who is being selected from
+     * @param q the question to prompt the player with
+     * @return the index of the selected district
+     */
     public int promptDistrictSelection(Player victim,String q) {
         if (victim.getCity().isEmpty()) return -1;
         if (victim instanceof AIPlayer) return 0;
@@ -484,6 +627,13 @@ public final class CitadelsGame {
             cli.println("Invalid index.");
         }
     }
+
+    /**
+     * Prompts the player to discard cards (Magician ability)
+     * @param p the player who is discarding the cards
+     * @param msg the message to prompt the player with
+     * @return the number of cards discarded
+     */
     public int promptAndDiscardCards(Player p,String msg){
         if(p instanceof AIPlayer)return 0;
         cli.println(msg+" (comma-separated hand indexes, blank cancels):");
@@ -500,6 +650,7 @@ public final class CitadelsGame {
         }
         return disc;
     }
+
 
     /* getters for GameState */
     public int getRobbedRank(){ return robbedRank; }
@@ -544,7 +695,13 @@ public final class CitadelsGame {
     /* ================================================================ *
      *  Character deck builder                                          *
      * ================================================================ */
+    /**
+     * Builds the character deck
+     * @return the character deck
+     */
     private Deck<CharacterCard> buildCharacterDeck() {
+        /*deck is a versatile data structure that allows for the insertion
+        and deletion of elements from both ends.*/
         return new Deck<>(Arrays.asList(
                 new Assassin(), new Thief(), new Magician(), new King(),
                 new Bishop(), new Merchant(), new Architect(), new Warlord()

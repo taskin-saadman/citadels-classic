@@ -13,6 +13,8 @@ public final class App {
         /* Console I/O handler (System.in/out) */
         ConsoleHandler io = new ConsoleHandler();
 
+        //prompt to load a saved game 
+
         /* ---- initial prompt ---- */
         int nPlayers = io.askPlayers();          // loops until 4-7 entered
 
