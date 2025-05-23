@@ -30,10 +30,6 @@ public interface CommandHandler {
      * @return an output string
      */
     String prompt(String msg);
-
-    /* ------------------------------------------------------------------ *
-     *  Interactive loop for the human player                             *
-     * ------------------------------------------------------------------ */
     
     /**
      * Handles the human player's turn
@@ -41,220 +37,212 @@ public interface CommandHandler {
      */
     default void humanTurnLoop(Player human) {
         ConsoleHandler io   = (ConsoleHandler) this; //cast to ConsoleHandler
-        CitadelsGame   game = io.getGame();
+        CitadelsGame game = io.getGame();
         boolean collected_resources = false; // used to flag 2 gold collection by player 1
         boolean initial_choice_prompt_given = false; //used to flag initial choice prompt
 
-        loop: // label for the loop (easy to break out of)
+        loop: // labeling the loop (easy to break out of)
         while(true) {
             Command cmd = CommandParser.parse(prompt("> ")); 
+
+            //if the initial choice prompt is not given, give it
             if (!initial_choice_prompt_given) {
                 initial_choice_prompt_given = true;
             }
 
-            switch (cmd.keyword()) {
-
-    /* ------------------------------------------------------ */
-    case "end":
-        println("You ended your turn.");
-        break loop; //break out of the infinite while loop
-
-    case "quit":
-        System.out.println("Do you want to save the game before quitting? (y/n)");
-        String save = prompt("");
-        if (save.equalsIgnoreCase("y")) {
-            saveGame(game, "saved_game.json");
-        }
-        System.exit(0);
-        break;
-
-    /* ------------------------------------------------------ */
-    case "hand":
-        println("You have " + human.getGold() + " gold. Cards in hand:");
-        List<DistrictCard> hand = human.getHand();
-        for (int i = 0; i < hand.size(); i++) {
-            DistrictCard card = hand.get(i);
-            println((i + 1) + ". " + card.getName() + " (" +
-                    card.getColor().toString().toLowerCase() + "), cost: " + card.getCost());
-        }
-        break;
-
-    case "gold": {
-        //first time collection command in a round
-        if (!collected_resources) {game.collectGold(human); collected_resources = true; break;}
-
-        //rest part is to check current gold count after user either collected gold or drew 2 district cards
-        int seat = cmd.args().isEmpty()
-                   ? human.getId()                    // default to current player
-                   : Integer.parseInt(cmd.arg(0, "1")) - 1;  // 1-based → 0-based
-
-        //handle index out of bounds
-        if (seat < 0 || seat >= game.getPlayers().size()) {
-            println("Invalid player number. Enter a number between 1 and " + game.getPlayers().size() + ".");
-            break;
-        }
-
-        Player target = game.getPlayers().get(seat);
-        println("Player " + (seat + 1) + " has " + target.getGold() + " gold.");
-        break;
-    }
-
-    case "build":
-        if (cmd.args().isEmpty()) {
-            println("build <index>"); //error message for no args
-            break;
-        }
-        try {
-            int idx = Integer.parseInt(cmd.arg(0, "-1")) - 1;
-            game.buildDistrict(human, human.getHand().get(idx));
-        } catch (Exception e) {
-            println("Invalid index. Enter a number between 1 and " + human.getHand().size() + ".");
-        }
-        break;
-
-    /* ------------------------------------------------------ */
-    /*  NEW: optional [p] parameter for city/citadel/list      */
-    case "city":
-    case "citadel":
-    case "list": { //either city , citadel or list was entered
-    //gold count, built districts is public info in this game
-    //handle index out of bounds
-        int seat = cmd.args().isEmpty()
-                   ? 0                              // default to player 1
-                   : Integer.parseInt(cmd.arg(0, "1")) - 1;  // 1-based → 0-based
-
-        //handle index out of bounds
-        if (seat < 0 || seat >= game.getPlayers().size()) {
-            println("Invalid player number. Enter a number between 1 and " + game.getPlayers().size() + ".");
-            break;
-        }
-
-        Player target = game.getPlayers().get(seat);          // assume sane input
-        List<DistrictCard> city = target.getCity();  
-
-        println("Player " + (seat + 1) + " city:");
-        if (city.isEmpty()) {
-            println("no districts built yet!");
-        } else {
-            for (DistrictCard d : city) println("  " + d.toString());
-        }
-        break;
-    }
-
-    case "all":
-        {
-            List<Player> players = game.getPlayers();
-            
-            for (Player p : players) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Player ").append(p.getId() + 1);
-                
-                // Add "(you)" for the human player
-                if (p.getId() == 0) {  // Human player is always player 0
-                    sb.append(" (you)");
-                }
-                
-                // Add cards count
-                sb.append(": cards=").append(p.getHand().size());
-                
-                // Add gold count
-                sb.append(" gold=").append(p.getGold());
-                
-                // Add city information
-                sb.append(" city=");
-                List<DistrictCard> city = p.getCity();
-                if (city.isEmpty()) {
-                    sb.append("");
-                } else {
-                    for (int i = 0; i < city.size(); i++) {
-                        DistrictCard card = city.get(i);
-                        sb.append(card.getName())
-                          .append(" [")
-                          .append(card.getColor().toString().toLowerCase())
-                          .append(card.getCost())
-                          .append("]");
-                        if (i < city.size() - 1) {
-                            sb.append(", ");
-                        }
+            switch (cmd.keyword()) { //outputs based on different commands by human player
+                case "save":
+                    if (cmd.args().isEmpty()) {
+                        println("save <file_name>");
+                        break;
                     }
+                    saveGame(game, cmd.arg(0, ""));
+                    break;
+
+                case "load":
+                    if (cmd.args().isEmpty()) {
+                        println("load <file_name>");
+                        break;
+                    }
+                    CitadelsGame newG = loadGame(cmd.arg(0, ""), io);
+                    if (newG != null) io.attachGame(newG);
+                    break;
+
+                case "quit":
+                    println("Do you want to save the game before quitting? (y/n)");
+                    String save = prompt(""); //prompt user for save confirmation
+                    if (save.equalsIgnoreCase("y")) {
+                        println("What would you like to name your save file?");
+                        String fileName = prompt("");
+                        println("Saving game...");
+                        saveGame(game, fileName+".json");
+                    }
+                    System.exit(0);
+                    break;
+
+                case "end":
+                    println("You ended your turn.");
+                    break loop;
+
+                case "hand": //display player's gold and cards in hand
+                    println("You have " + human.getGold() + " gold. Cards in hand:");
+                    List<DistrictCard> hand = human.getHand();
+                    for (int i = 0; i < hand.size(); i++) {
+                        DistrictCard card = hand.get(i);
+                        println((i + 1) + ". " + card.getName() + " (" +
+                        card.getColor().toString().toLowerCase() + "), cost: " + card.getCost());
+                    }
+                    break;
+
+                case "gold": {
+                    //first time collection command in a round
+                    if (!collected_resources) {game.collectGold(human); collected_resources = true; break;}
+
+                    //rest part is to check current gold count after user either collected gold or drew 2 district cards
+                    int seat = cmd.args().isEmpty()
+                        ? human.getId()                    // default to current player
+                        : Integer.parseInt(cmd.arg(0, "1")) - 1;  // 1-based → 0-based
+
+                    //handle index out of bounds
+                    if (seat < 0 || seat >= game.getPlayers().size()) {
+                        println("Invalid player number. Enter a number between 1 and " + game.getPlayers().size() + ".");
+                        break;
+                    }
+
+                    Player target = game.getPlayers().get(seat);
+                    println("Player " + (seat + 1) + " has " + target.getGold() + " gold.");
+                    break;
                 }
-                
-                println(sb.toString());
+
+                case "build":
+                    if (cmd.args().isEmpty()) {
+                        println("build <index>"); //error message for no args
+                        break;
+                    }
+                    try {
+                        int idx = Integer.parseInt(cmd.arg(0, "-1")) - 1;
+                        game.buildDistrict(human, human.getHand().get(idx));
+                    } catch (Exception e) {
+                        println("Invalid index. Enter a number between 1 and " + human.getHand().size() + ".");
+                    }
+                    break;
+
+                //optional [p] parameter for city/citadel/list
+                case "city":
+                case "citadel":
+                case "list": { //either city , citadel or list was entered
+                    try { //handle index out of bounds
+                        int seat = cmd.args().isEmpty()
+                            ? 0                              // default to player 1
+                            : Integer.parseInt(cmd.arg(0, "1")) - 1;  // 1-based → 0-based
+
+                        //handle index out of bounds
+                        if (seat < 0 || seat >= game.getPlayers().size()) {
+                            println("Invalid player number. Enter a number between 1 and " + game.getPlayers().size() + ".");
+                            break;
+                        }
+
+                        Player target = game.getPlayers().get(seat);          // assume sane input
+                        List<DistrictCard> city = target.getCity();  
+
+                        println("Player " + (seat + 1) + " city:");
+                        if (city.isEmpty()) {
+                            println("no districts built yet!");
+                        } else {
+                            for (DistrictCard d : city) println("  " + d.toString());
+                        }
+                    } catch (NumberFormatException e) {
+                        println("Invalid player number. Enter a number between 1 and " + game.getPlayers().size() + ".");
+                    }
+                    break;
+                }
+
+                case "all": { //show everyone's gold, no. of cards  and built districts
+                    List<Player> players = game.getPlayers();
+                    
+                    for (Player p : players) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Player ").append(p.getId() + 1);
+                        
+                        // Add "(you)" for the human player
+                        if (p.getId() == 0) {  // Human player is always player 0
+                            sb.append(" (you)");
+                        }
+                        
+                        sb.append(": cards=").append(p.getHand().size());
+                        sb.append(" gold=").append(p.getGold());
+                        sb.append(" city=");
+                        List<DistrictCard> city = p.getCity();
+                        if (city.isEmpty()) {
+                            sb.append("");
+                        } else {
+                            for (int i = 0; i < city.size(); i++) {
+                                DistrictCard card = city.get(i);
+                                sb.append(card.getName())
+                                  .append(" [")
+                                  .append(card.getColor().toString().toLowerCase())
+                                  .append(card.getCost())
+                                  .append("]");
+                                if (i < city.size() - 1) {
+                                    sb.append(", ");
+                                }
+                            }
+                        }
+                        
+                        println(sb.toString());
+                    }
+                    break;
+                }
+
+                case "action":
+                    handleActionCommand(game, human, cmd.args());
+                    break;
+
+                case "info":
+                    if (cmd.args().isEmpty()) {
+                        println("info <name OR index>");
+                        break;
+                    }
+                    infoCommand(game, human, cmd.arg(0, ""));
+                    break;
+
+                case "cards":
+                    if (collected_resources) { println("You already gathered resources this round!"); break;}
+                    game.drawTwoChoose(human);
+                    collected_resources = true;
+                    break;
+
+                case "debug":
+                    io.toggleDebug();
+                    println("Debug " + (io.isDebug() ? "enabled." : "disabled."));
+                    break;
+
+                case "help":
+                default:
+                    printHelp();
+                    break;
             }
-            break;
-        }
-
-    /* ---------------- action / info ----------------------- */
-    case "action":
-        handleActionCommand(game, human, cmd.args());
-        break;
-
-    case "info":
-        if (cmd.args().isEmpty()) {
-            println("info <name|index>");
-            break;
-        }
-        infoCommand(game, human, cmd.arg(0, ""));
-        break;
-
-    /* ---------------- collect / draw ---------------------- */
-    case "cards":
-        if (collected_resources) { println("You already gathered resources this round!"); break;}
-        game.drawTwoChoose(human);
-        collected_resources = true;
-        break;
-
-    /* ---------------- save / load ------------------------- */
-    case "save":
-        if (cmd.args().isEmpty()) {
-            println("save <file_name>");
-            break;
-        }
-        saveGame(game, cmd.arg(0, ""));
-        break;
-
-    case "load":
-        if (cmd.args().isEmpty()) {
-            println("load <file_name>");
-            break;
-        }
-        CitadelsGame newG = loadGame(cmd.arg(0, ""), io);
-        if (newG != null) io.attachGame(newG);
-        break;
-
-    /* ---------------- debug flag -------------------------- */
-    case "debug":
-        io.toggleDebug();
-        println("Debug " + (io.isDebug() ? "enabled." : "disabled."));
-        break;
-
-    /* ---------------- help & default ---------------------- */
-    case "help":
-    default:
-        printHelp();
-}
-
         }
     }
 
-
-
-
-    /* -------------------------------------------------------- *
-     *  Action command handler (Thief, Magician, etc.)          *
-     * -------------------------------------------------------- */
+    /**
+     * Handles the action command (Thief, Magician, Assassin, Warlord)
+     * @param game the game
+     * @param human the human player
+     * @param args the arguments
+     */
     default void handleActionCommand(CitadelsGame game,
                                      Player human,
                                      List<String> args) {
-        CharacterCard ch = human.getCharacter();
-        int rank = ch.getRank();
+        CharacterCard ch = human.getCharacter(); //get the character card of the human player
+        int rank = ch.getRank(); //get the rank of the character card
 
-        if (args.isEmpty()) {
+        if (args.isEmpty()) {//print the help message for the action command for specific character card
             println(actionHelp(ch));
             return;
         }
 
-        switch (rank) {
+        switch (rank) { //switch-case to handle the action command for specific character card
             case 1: // Assassin (enters "kill <2-8>")
                 if (args.size() == 2 && "kill".equalsIgnoreCase(args.get(0))) {
                     int r = parseRank(args.get(1));
@@ -335,14 +323,14 @@ public interface CommandHandler {
             case 5:  return "Automatic: gains gold for blue districts and gets immunity";
             case 6:  return "Automatic: gains gold for green districts + 1 extra gold\nformat: action none";
             case 7:  return "Automatic: draws 2 extra cards and may build 3 districts\nformat: action none";
-            case 8:  return "Destroy a district? [y/N]\nformat: action destroy <player#> <district#>";
+            case 8:  return "Destroy a district?\nformat: action destroy <player#> <district#>";
             default: return "";
         }
     }
 
     static void printHelp() {
         System.out.println("--------------------------------");
-        System.out.println("<<<<<<-ALL COMMANDS->>>>>>");
+        System.out.println("<-<-<-<-<-<-HELP->->->->->->");
         System.out.println("--------------------------------");
         System.out.println("info : show information about a character or building");
         System.out.println("t : processes turns");

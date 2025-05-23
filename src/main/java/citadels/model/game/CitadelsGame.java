@@ -234,7 +234,7 @@ public final class CitadelsGame {
 
             if (rank == 4) crownedSeat = acting.getId(); // King crown
 
-            builtThisTurn.put(acting, 0);
+            builtThisTurn.put(acting, 0); //reset the builtThisTurn map for the current player
 
             if (rank == robbedRank && thiefPlayer != null && thiefPlayer != acting) {
                 int stolen = acting.getGold();
@@ -259,10 +259,6 @@ public final class CitadelsGame {
             waitForHumanT();
         }
     }
-
-    /* ================================================================ *
-     *  Wait helper                                                     *
-     * ================================================================ */
 
     /**
      * Waits for the human player to press t to continue
