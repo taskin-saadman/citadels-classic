@@ -9,15 +9,16 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 /**
- * Robust loader for the assignment-supplied cards.tsv (Name&nbsp;Qty&nbsp;color&nbsp;cost&nbsp;text).
- * Splits on either one-or-more tabs OR two-or-more spaces, so multi-word names stay intact.
+ * Loads cards.tsv (Name&nbsp;Qty&nbsp;color&nbsp;cost&nbsp;text).
  */
 public final class TSVLoader {
 
-    private TSVLoader() { }
-
+    /**
+     * Loads cards.tsv (Name&nbsp;Qty&nbsp;color&nbsp;cost&nbsp;text).
+     * The main game deck is loaded here.
+     * @return List<DistrictCard>
+     */
     public static List<DistrictCard> loadDistrictDeck() {
-
         /* locate resource on classpath */
         InputStream in = TSVLoader.class.getResourceAsStream("/citadels/cards.tsv");
         if (in == null) in = TSVLoader.class.getResourceAsStream("/cards.tsv");
@@ -25,29 +26,26 @@ public final class TSVLoader {
 
         List<DistrictCard> deck = new ArrayList<>();
 
+        //try to read the file (utf-8 encoding)
         try (BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"))) {
             String line;
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) continue;
-
+            while ((line = br.readLine()) != null) { // until end of file
+                line = line.trim(); //trim whitespace
+                if (line.isEmpty()) continue; //skip empty lines
                 // Split on:  (one-or-more tabs)  OR  (two-or-more spaces)
-                String[] t = line.split("\\t+| {2,}");
-                if (t.length < 4) continue;           // need at least 4 columns
+                String[] t = line.split("\\t"); //regex to split on tabs
+                if (t.length < 4) continue;     // need at least 4 columns
 
-                /* Skip header row (first token "name" case-insensitive) */
-                if (t[0].equalsIgnoreCase("name")) continue;
+                if (t[0].equalsIgnoreCase("name")) continue; //skip header row
 
-                /* Expected order: Name  Qty  color  cost  [special ...] */
-                String name = t[0].trim();
+                String name = t[0].trim(); //name
 
                 int qty, cost;
                 try {
                     qty  = Integer.parseInt(t[1].trim());
                     cost = Integer.parseInt(t[3].trim());
                 } catch (NumberFormatException ex) {
-                    /* malformed numeric columns → skip row */
-                    continue;
+                    continue; //malformed numeric columns → skip row
                 }
 
                 String colorRaw = t[2].trim().toUpperCase(Locale.ROOT);
@@ -58,7 +56,7 @@ public final class TSVLoader {
                     continue;    // invalid colour → skip row
                 }
 
-                /* Join remaining tokens (index ≥4) into special text */
+                //text of purple cards
                 String special = null;
                 if (t.length > 4) {
                     StringBuilder sb = new StringBuilder();
@@ -69,7 +67,7 @@ public final class TSVLoader {
                     special = sb.toString();
                 }
 
-                /* Add quantity copies */
+                //add quantity copies
                 for (int i = 0; i < qty; i++)
                     deck.add(new DistrictCard(name, color, cost, special));
             }

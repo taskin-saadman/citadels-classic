@@ -12,28 +12,39 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * CommandHandler interface
- * 
- * This interface defines the methods that a command handler must implement.
- * It provides low-level I/O operations and a method for handling human turns.
- * 
+ * This interface provides low-level I/O operations and a method for handling human turns.
  */
 public interface CommandHandler {
 
     /* low-level I/O */
+
+    /**
+     * Prints a message to the console
+     * @param msg message to print
+     */
     void println(String msg);
+
+    /**
+     * Prompts the user for input
+     * @param msg prompt message
+     * @return an output string
+     */
     String prompt(String msg);
 
     /* ------------------------------------------------------------------ *
      *  Interactive loop for the human player                             *
      * ------------------------------------------------------------------ */
+    
+    /**
+     * Handles the human player's turn
+     * @param human human player
+     */
     default void humanTurnLoop(Player human) {
-
-        ConsoleHandler io   = (ConsoleHandler) this;
+        ConsoleHandler io   = (ConsoleHandler) this; //cast to ConsoleHandler
         CitadelsGame   game = io.getGame();
+        boolean collected_resources = false; // used to flag 2 gold collection by player 1
+        boolean initial_choice_prompt_given = false; //used to flag initial choice prompt
 
-        boolean collected_resources = false; //will be used for the round's 2 gold collection by player 1
-        boolean initial_choice_prompt_given = false; //will be used for initial choice prompt
         loop: // label for the loop (easy to break out of)
         while(true) {
             Command cmd = CommandParser.parse(prompt("> ")); 
@@ -330,7 +341,9 @@ public interface CommandHandler {
     }
 
     static void printHelp() {
-        System.out.println("---AVAILABLE COMMANDS---");
+        System.out.println("--------------------------------");
+        System.out.println("<<<<<<-ALL COMMANDS->>>>>>");
+        System.out.println("--------------------------------");
         System.out.println("info : show information about a character or building");
         System.out.println("t : processes turns");
         System.out.println("all : shows all current game info");
