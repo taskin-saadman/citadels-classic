@@ -329,9 +329,7 @@ public interface CommandHandler {
     }
 
     static void printHelp() {
-        System.out.println("--------------------------------");
-        System.out.println("<-<-<-<-<-<-HELP->->->->->->");
-        System.out.println("--------------------------------");
+        System.out.println("--------------HELP--------------");
         System.out.println("info : show information about a character or building");
         System.out.println("t : processes turns");
         System.out.println("all : shows all current game info");
@@ -393,7 +391,7 @@ public interface CommandHandler {
         try (FileWriter fw = new FileWriter(file + ".json")) {
             JSONObject js = citadels.model.game.GameState.serialise(g); 
             js.writeJSONString(fw); 
-            System.out.println("Game saved successfully as " + file + ".json");
+            System.out.println("Game saved successfully as " + file);
         } catch (IOException e) { //if the file is not found or cannot be written to
             System.out.println("Save failed: " + e.getMessage());
         }
@@ -412,8 +410,8 @@ public interface CommandHandler {
             System.out.println("Game loaded.");
             return g;
         } catch (Exception e) { //if the file is not found or cannot be read
-            System.out.println("Load failed: " + e.getMessage());
-            return null;
+            System.out.println("Load failed: " + e.getMessage() + "\n\nPlease enter a valid file name.");
+            return loadGame(io.askString(), io);
         }
     }
 }

@@ -44,8 +44,12 @@ public final class ConsoleHandler implements CommandHandler {
     public int askPlayers() {
         while (true) {
             String raw = prompt("Enter how many players [4-7]:\n> ");
-            int n = Integer.parseInt(raw.trim());
-            if (n >= 4 && n <= 7) return n;   
+            try {
+                int n = Integer.parseInt(raw.trim());
+                if (n >= 4 && n <= 7) return n;   
+            } catch (NumberFormatException e) {
+                println("Invalid input. Please enter a number between 4 and 7.");
+            }
         }
     }
 
@@ -75,5 +79,15 @@ public final class ConsoleHandler implements CommandHandler {
      * @return the user's input
      */
     public String prompt(String m){ System.out.print(m); return in.nextLine(); }
+
+    /**
+     * Read an entire line (no extra prompt).
+     * Used for the filename prompt when loading mid-game.
+     * @return the user's input
+     */
+    public String askString() {
+        return in.nextLine();
+    }
+
 
 }

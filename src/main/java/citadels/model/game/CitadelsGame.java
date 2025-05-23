@@ -245,8 +245,7 @@ public final class CitadelsGame {
             }
 
             if (acting instanceof HumanPlayer) {
-                cli.println("Your turn.\nCollect 2 gold or draw two cards and pick one [gold/cards]:");
-                //***add specific character ability message/ message method here***
+               cli.println("Your turn.\nCollect 2 gold or draw two cards and pick one [gold/cards]:");
             }
 
             acting.takeTurn(this); 
@@ -649,41 +648,105 @@ public final class CitadelsGame {
     }
 
 
-    /* getters for GameState */
+    /**
+     * Returns the rank of the robbed character
+     * @return the rank of the robbed character
+     */
     public int getRobbedRank(){ return robbedRank; }
+
+    /**
+     * Returns the set of killed ranks
+     * @return the set of killed ranks
+     */
     public Set<Integer> getKilledRanks(){ return new HashSet<>(killedRanks); }
+
+    /**
+     * Returns the player protected by the bishop
+     * @return the player protected by the bishop
+     */
     public Set<Player> getBishopProtected(){ return new HashSet<>(bishopProtected); }
+
+    /**
+     * Sets the robbed rank
+     * @param r the rank of the robbed character
+     */
     public void setRobbedRank(int r){ robbedRank=r; }
+
+    /**
+     * Sets the killed ranks
+     * @param ks the set of killed ranks
+     */
     public void setKilledRanks(Set<Integer> ks){ killedRanks.clear(); killedRanks.addAll(ks); }
+
+
     public void setBishopProtected(Set<Player> ps){ bishopProtected.clear(); bishopProtected.addAll(ps); }
+
+    /**
+     * Returns the player at the given seat
+     * @param seat the seat of the player
+     * @return the player at the given seat
+     */
     public Player getPlayer(int seat){ return players.get(seat); }
+
+    /**
+     * Returns the list of players
+     * @return the list of players
+     */
     public java.util.List<Player> getPlayers() {return java.util.Collections.unmodifiableList(players);}
+
+    /**
+     * Returns the command handler
+     * @return the command handler
+     */
     public citadels.cli.CommandHandler cli() {return cli;}
 
-        /* ------------------------------------------------- *
+    /**
+     * Returns the command handler
+     * @return the command handler
+     */
+
+    /* ------------------------------------------------- *
      *  Save / load round + deck helpers for GameState   *
      * ------------------------------------------------- */
 
-    /** Current round number (1-based). */
+    /**
+     * Returns the current round number
+     * @return the current round number
+     */
     public int getRound() { return roundNo; }
 
-    /** Crowned player's seat index. */
+    /**
+     * Returns the crowned seat
+     * @return the crowned seat
+     */
     public int getCrownedSeat() { return crownedSeat; }
 
-    /** Ordered list of the remaining district deck for save. */
+    /** 
+     * Returns the list of district deck names
+     * @return the list of district deck names
+     */
     public java.util.List<String> getDistrictDeckNames() {
         java.util.List<String> names = new java.util.ArrayList<>();
         for (DistrictCard d : districtDeck.asListView()) names.add(d.getName());
         return names;
     }
 
-    /** For loading a save: set round number. */
+    /**
+     * Sets the round number
+     * @param r the round number
+     */
     public void setRound(int r) { this.roundNo = r; }
 
-    /** For loading a save: set who holds the crown. */
+    /**
+     * Sets the crowned seat
+     * @param seat the seat of the crowned player
+     */
     public void setCrownedSeat(int seat) { this.crownedSeat = seat; }
 
-    /** Replace the current deck with an ordered list of cards (for load). */
+    /**
+     * Replaces the current deck with an ordered list of cards
+     * @param ordered the ordered list of cards
+     */
     public void resetDistrictDeck(java.util.List<citadels.model.card.DistrictCard> ordered) {
         this.districtDeck = new Deck<>(ordered);
     }
