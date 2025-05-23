@@ -11,7 +11,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-
+/**
+ * CommandHandler interface
+ * 
+ * This interface defines the methods that a command handler must implement.
+ * It provides low-level I/O operations and a method for handling human turns.
+ * 
+ */
 public interface CommandHandler {
 
     /* low-level I/O */

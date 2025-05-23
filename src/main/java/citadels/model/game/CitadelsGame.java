@@ -77,18 +77,19 @@ public final class CitadelsGame {
                 " is the crowned player and goes first.");
         cli.println("Press t to process turns");
 
-        selectionPhase();
-        turnPhase();
+        selectionPhase(); //SELECTION PHASE
+        turnPhase(); //TURN PHASE
 
         /* End-of-round line */
         cli.println("Everyone is done, new round!");
-        waitForHumanT(); //wait to press t after round ends
+        waitForHumanT();
 
+        //prepare for next round
         roundNo++;
-        killedRanks.clear();
-        robbedRank  = -1;
-        thiefPlayer = null;
-        bishopProtected.clear();
+        killedRanks.clear(); //clear the killed ranks
+        robbedRank  = -1; //reset the robbed rank
+        thiefPlayer = null; //reset the thief player
+        bishopProtected.clear(); //clear the bishop protection
     }
 
     /**
@@ -218,7 +219,7 @@ public final class CitadelsGame {
             cli.println(rank + ": " + rankName(rank));
 
             if (killedRanks.contains(rank)) {
-                cli.println("Character was killed - skipping turn.");
+                cli.println("Player " + (acting.getId()+1) + " loses their turn because they were assassinated.");
                 waitForHumanT();
                 continue;
             }
@@ -248,7 +249,7 @@ public final class CitadelsGame {
                 //***add specific character ability message/ message method here***
             }
 
-            acting.takeTurn(this);
+            acting.takeTurn(this); 
 
             //if debug is on and the player is an AI, print the hand of the player
             if (cli instanceof ConsoleHandler && ((ConsoleHandler)cli).isDebug()
@@ -350,7 +351,7 @@ public final class CitadelsGame {
             case 6: return "Merchant";
             case 7: return "Architect";
             case 8: return "Warlord";
-            default: return "?";
+            default: return "?"; //should never happen for valid rank
         }
     }
 
